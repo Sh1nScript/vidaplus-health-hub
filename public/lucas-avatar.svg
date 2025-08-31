@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Avatar Paciente Lucas">
+  <rect width="160" height="160" rx="80" fill="url(#g)"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="160" y2="160" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10b981"/>
+      <stop offset="1" stop-color="#065f46"/>
+    </linearGradient>
+    <clipPath id="c"><circle cx="80" cy="80" r="60"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <circle cx="80" cy="66" r="28" fill="#f5d0b5"/>
+    <path d="M52 122c4-18 24-24 28-24s24 6 28 24v22H52v-22Z" fill="#ffffff"/>
+    <path d="M60 126c0-10 8-18 20-18s20 8 20 18" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+    <path d="M74 94h12l2 8-8 4-8-4 2-8Z" fill="#ffffff"/>
+    <path d="M52 72c0-17 12-34 28-34s28 17 28 34c0 10-4 14-4 14s-8-6-24-6-24 6-24 6-4-4-4-14Z" fill="#065f46"/>
+    <circle cx="84" cy="128" r="4" fill="#10b981"/>
+  </g>
+  <text x="80" y="154" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" opacity="0.8">Lucas</text>
+</svg>
