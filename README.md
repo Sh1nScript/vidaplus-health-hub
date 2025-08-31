@@ -1,73 +1,111 @@
-# Welcome to your Lovable project
+# VidaPlus Health Hub
 
-## Project info
+Painel (dashboard) web em React/TypeScript para diferentes perfis (Paciente, Médico, Admin), usando Vite, Tailwind e componentes acessíveis.
 
-**URL**: https://lovable.dev/projects/eb14cb9c-48d8-4cdf-9c75-b76ca061fa68
+## ✨ Principais Features
 
-## How can I edit this code?
+- Múltiplos dashboards (Paciente, Médico, Admin)
+- Biblioteca de componentes reutilizáveis (shadcn + Radix primitives)
+- Theming (modo claro/escuro) via classes
+- Formulários tipados com React Hook Form + Zod
+- Fetch/cache de dados preparado para React Query
+- Layout responsivo e acessível
 
-There are several ways of editing your application.
+## 🧱 Stack Tecnológica
 
-**Use Lovable**
+| Categoria | Tecnologias |
+|-----------|-------------|
+| Build | Vite + SWC (@vitejs/plugin-react-swc) |
+| Linguagem | TypeScript, React 18 |
+| UI | Tailwind CSS, shadcn/ui, Radix UI, lucide-react |
+| Formulários | react-hook-form, zod, @hookform/resolvers |
+| Estado remoto | @tanstack/react-query |
+| Gráficos | recharts |
+| Datas | date-fns, react-day-picker |
+| Feedback/UX | sonner (toasts) |
+| Utilidades CSS | class-variance-authority, tailwind-merge, clsx |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/eb14cb9c-48d8-4cdf-9c75-b76ca061fa68) and start prompting.
+## 🚀 Início Rápido
 
-Changes made via Lovable will be committed automatically to this repo.
+Pré-requisitos: Node.js LTS (ou Bun). Recomendo Node >= 20.
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+Clonar e instalar (npm):
+ 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/Sh1nScript/vidaplus-health-hub.git
+cd vidaplus-health-hub
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Usando Bun (opcional):
+ 
+```sh
+bun install
+bun run dev
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Abrir o browser: <http://localhost:5173> (ou porta mostrada no terminal).
 
-**Use GitHub Codespaces**
+## 📂 Estrutura Simplificada
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```text
+src/
+	components/        # Componentes reutilizáveis e dashboards
+	pages/             # Páginas de rota
+	hooks/             # Hooks customizados
+	lib/               # Utilidades (helpers)
+	main.tsx           # Entrada React
+```
 
-## What technologies are used for this project?
+## 🛠 Scripts Principais
 
-This project is built with:
+| Script | Descrição |
+|--------|-----------|
+| dev | Ambiente de desenvolvimento |
+| build | Build de produção (gera `dist/`) |
+| preview | Servir build localmente |
+| lint | ESLint |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🌐 Deploy no GitHub Pages
 
-## How can I deploy this project?
+O repositório já inclui workflow (`.github/workflows/deploy.yml`). Em cada push na branch `main`:
 
-Simply open [Lovable](https://lovable.dev/projects/eb14cb9c-48d8-4cdf-9c75-b76ca061fa68) and click on Share -> Publish.
+1. Instala dependências
+2. Executa `vite build`
+3. Publica `dist/` no GitHub Pages
 
-## Can I connect a custom domain to my Lovable project?
+Configuração chave no `vite.config.ts`:
+ 
+```ts
+base: mode === 'production' ? '/vidaplus-health-hub/' : '/',
+```
 
-Yes, you can!
+URL final: <https://sh1nscript.github.io/vidaplus-health-hub/>
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Se mudar o nome do repo, ajuste a `base` e faça novo commit.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Domínio personalizado
+
+Em Settings > Pages adicione um domínio (opcional). Crie um `CNAME` apontando para `sh1nscript.github.io`.
+
+## 🧪 Boas Práticas Futuras
+
+- Adicionar testes (Vitest / Testing Library)
+- Adicionar CI de lint e type-check
+- Integração real de API + React Query
+- Proteção de rotas e autenticação real
+
+## 🤝 Contribuição
+
+1. Crie uma branch: `git checkout -b feature/minha-feature`
+2. Commit: `git commit -m "feat: minha feature"`
+3. Push: `git push origin feature/minha-feature`
+4. Abra um Pull Request
+
+## 📄 Licença
+
+Defina aqui a licença (ex: MIT). Se usar MIT, crie um arquivo `LICENSE`.
+
+---
+Made with React & Tailwind.
