@@ -11,12 +11,18 @@ import ForgotPassword from "./pages/ForgotPassword";
 
 const queryClient = new QueryClient();
 
+// Em GitHub Pages o app é servido em /vidaplus-health-hub/.
+// Vite expõe import.meta.env.BASE_URL com a base definida em vite.config.ts.
+// Normalizamos removendo a barra final para usar como basename do BrowserRouter,
+// evitando que "/vidaplus-health-hub/" caia na rota * (404) quando recarrega a página.
+const baseName = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+  <BrowserRouter basename={baseName}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
