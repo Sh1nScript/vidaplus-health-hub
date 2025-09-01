@@ -285,7 +285,7 @@ export const AdminDashboard = () => {
                   <p className="text-[11px] text-muted-foreground italic">Nenhum paciente cadastrado.</p>
                 )}
                 {patients.map(p => (
-                  <div key={p.id} className="p-3 border rounded-md text-xs flex justify-between items-start gap-3 bg-background/60">
+                  <div key={p.id} data-testid={`patient-row-${p.id}`} className="p-3 border rounded-md text-xs flex justify-between items-start gap-3 bg-background/60">
                     <div className="flex-1">
                       {editingPatientId === p.id ? (
                         <div className="space-y-1">
@@ -331,7 +331,7 @@ export const AdminDashboard = () => {
                   <p className="text-[11px] text-muted-foreground italic">Nenhum profissional cadastrado.</p>
                 )}
                 {doctors.map(d => (
-                  <div key={d.id} className="p-3 border rounded-md text-xs flex justify-between items-start gap-3 bg-background/60">
+                  <div key={d.id} data-testid={`doctor-row-${d.id}`} className="p-3 border rounded-md text-xs flex justify-between items-start gap-3 bg-background/60">
                     <div className="flex-1">
                       {editingDoctorId === d.id ? (
                         <div className="space-y-1">
