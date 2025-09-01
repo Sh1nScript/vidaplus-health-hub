@@ -15,12 +15,23 @@ import {
   Stethoscope,
   Activity,
   Download,
-  BarChart3
+  BarChart3,
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +59,9 @@ export const AdminDashboard = () => {
   const [editingPatientName, setEditingPatientName] = useState("");
   const [editingDoctorId, setEditingDoctorId] = useState<number | null>(null);
   const [editingDoctorName, setEditingDoctorName] = useState("");
+  const [addPatientOpen, setAddPatientOpen] = useState(false);
+  const [addDoctorOpen, setAddDoctorOpen] = useState(false);
+  const [deletionTarget, setDeletionTarget] = useState<null | { type: 'patient' | 'doctor'; id: number; name: string }>(null);
   const nextIdRef = useRef<number>(4); // inicia após os ids existentes
   const genId = () => nextIdRef.current++;
 
@@ -56,7 +70,8 @@ export const AdminDashboard = () => {
     if(!name) return;
     setPatients(prev => [...prev, { id: genId(), name, age: 0, status: 'Novo', bed: '-' }]);
     setNewPatientName('');
-    toast({ title: 'Paciente adicionado (fake)' });
+  toast({ title: 'Paciente adicionado (fake)' });
+  setAddPatientOpen(false);
   };
 
   const addDoctor = () => {
@@ -65,6 +80,17 @@ export const AdminDashboard = () => {
     setDoctors(prev => [...prev, { id: genId(), name, specialty: 'Geral' }]);
     setNewDoctorName('');
     toast({ title: 'Profissional adicionado (fake)' });
+    setAddDoctorOpen(false);
+  };
+  const confirmDelete = () => {
+    if(!deletionTarget) return;
+    if(deletionTarget.type === 'patient') {
+      setPatients(prev => prev.filter(p => p.id !== deletionTarget.id));
+    } else {
+      setDoctors(prev => prev.filter(d => d.id !== deletionTarget.id));
+    }
+    toast({ title: `${deletionTarget.type === 'patient' ? 'Paciente' : 'Profissional'} excluído (fake)` });
+    setDeletionTarget(null);
   };
   const [admissions, setAdmissions] = useState([
     { id: 101, patient: 'Maria Souza', reason: 'Pneumonia', ward: 'A', bed: '12', since: '2025-08-28', status: 'Ativa' },
@@ -218,9 +244,11 @@ export const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Button className="h-20 flex flex-col gap-2" onClick={() => setRegistrationsOpen(true)}>
-              <UserCheck className="h-6 w-6" />
-              <span>Cadastros</span>
+            <Button className="h-20 relative flex flex-col items-center justify-center gap-1 group overflow-hidden" onClick={() => setRegistrationsOpen(true)}>
+              <UserCheck className="h-6 w-6 transition-transform group-hover:scale-110" />
+              <span className="font-medium">Cadastros</span>
+              <span className="text-[10px] text-muted-foreground">Pac {patients.length} • Prof {doctors.length}</span>
+              <span aria-hidden className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-primary/0 group-hover:ring-primary/40 transition" />
             </Button>
             <Button variant="secondary" className="h-20 flex flex-col gap-2" onClick={() => setBedsOpen(true)}>
               <Bed className="h-6 w-6" />
@@ -250,9 +278,8 @@ export const AdminDashboard = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Users className="h-4 w-4 text-primary" /> Pacientes</h4>
-                <Button size="sm" onClick={addPatient} disabled={!newPatientName.trim()} className="gap-1"><Plus className="h-3 w-3" /> Adicionar</Button>
+                <Button size="sm" variant="outline" onClick={()=>{ setNewPatientName(''); setAddPatientOpen(true); }} className="gap-1"><Plus className="h-3 w-3" /> Novo</Button>
               </div>
-              <Input placeholder="Nome do paciente" value={newPatientName} onChange={e=>setNewPatientName(e.target.value)} className="text-sm" onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addPatient(); } }} />
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                 {patients.length === 0 && (
                   <p className="text-[11px] text-muted-foreground italic">Nenhum paciente cadastrado.</p>
@@ -281,7 +308,13 @@ export const AdminDashboard = () => {
                       )}
                     </div>
                     {editingPatientId !== p.id && (
-                      <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingPatientId(p.id); setEditingPatientName(p.name); }}>Editar</Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingPatientId(p.id); setEditingPatientName(p.name); }}>Editar</Button>
+                        <Button size="sm" variant="destructive" className="h-7 px-2 text-[11px]" title="Excluir paciente" onClick={()=> setDeletionTarget({ type: 'patient', id: p.id, name: p.name })}>
+                          <Trash2 className="h-3 w-3" />
+                          <span className="sr-only">Excluir</span>
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -291,9 +324,8 @@ export const AdminDashboard = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Stethoscope className="h-4 w-4 text-primary" /> Profissionais</h4>
-                <Button size="sm" onClick={addDoctor} disabled={!newDoctorName.trim()} className="gap-1"><Plus className="h-3 w-3" /> Adicionar</Button>
+                <Button size="sm" variant="outline" onClick={()=>{ setNewDoctorName(''); setAddDoctorOpen(true); }} className="gap-1"><Plus className="h-3 w-3" /> Novo</Button>
               </div>
-              <Input placeholder="Nome do profissional" value={newDoctorName} onChange={e=>setNewDoctorName(e.target.value)} className="text-sm" onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addDoctor(); } }} />
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                 {doctors.length === 0 && (
                   <p className="text-[11px] text-muted-foreground italic">Nenhum profissional cadastrado.</p>
@@ -322,7 +354,13 @@ export const AdminDashboard = () => {
                       )}
                     </div>
                     {editingDoctorId !== d.id && (
-                      <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingDoctorId(d.id); setEditingDoctorName(d.name); }}>Editar</Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingDoctorId(d.id); setEditingDoctorName(d.name); }}>Editar</Button>
+                        <Button size="sm" variant="destructive" className="h-7 px-2 text-[11px]" title="Excluir profissional" onClick={()=> setDeletionTarget({ type: 'doctor', id: d.id, name: d.name })}>
+                          <Trash2 className="h-3 w-3" />
+                          <span className="sr-only">Excluir</span>
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -331,6 +369,53 @@ export const AdminDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Dialog Adicionar Paciente */}
+      <Dialog open={addPatientOpen} onOpenChange={setAddPatientOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Novo Paciente</DialogTitle>
+            <DialogDescription>Cadastro rápido (simulado).</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <Input placeholder="Nome completo" value={newPatientName} onChange={e=>setNewPatientName(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addPatient(); } }} />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button size="sm" variant="outline" onClick={()=> setAddPatientOpen(false)}>Cancelar</Button>
+              <Button size="sm" disabled={!newPatientName.trim()} onClick={addPatient}>Salvar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Dialog Adicionar Profissional */}
+      <Dialog open={addDoctorOpen} onOpenChange={setAddDoctorOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Novo Profissional</DialogTitle>
+            <DialogDescription>Cadastro rápido (simulado).</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <Input placeholder="Nome completo" value={newDoctorName} onChange={e=>setNewDoctorName(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addDoctor(); } }} />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button size="sm" variant="outline" onClick={()=> setAddDoctorOpen(false)}>Cancelar</Button>
+              <Button size="sm" disabled={!newDoctorName.trim()} onClick={addDoctor}>Salvar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* AlertDialog confirmação exclusão */}
+      <AlertDialog open={!!deletionTarget} onOpenChange={(open)=>{ if(!open) setDeletionTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {deletionTarget?.type === 'patient' ? 'o paciente' : 'o profissional'} <span className="font-medium">{deletionTarget?.name}</span>? A ação é apenas simulada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Dialog Internações */}
       <Dialog open={bedsOpen} onOpenChange={setBedsOpen}>
