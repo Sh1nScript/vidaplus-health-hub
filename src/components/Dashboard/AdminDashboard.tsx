@@ -1,9 +1,9 @@
-import { 
-  Users, 
-  Bed, 
-  DollarSign, 
-  TrendingUp, 
-  UserCheck, 
+import {
+  Users,
+  Bed,
+  DollarSign,
+  TrendingUp,
+  UserCheck,
   Calendar,
   FileBarChart,
   Settings,
@@ -22,18 +22,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 export const AdminDashboard = () => {
   const { toast } = useToast();
-  const [staffOpen, setStaffOpen] = useState(false);
   const [bedsOpen, setBedsOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
   const [registrationsOpen, setRegistrationsOpen] = useState(false);
-  const [newPatientName, setNewPatientName] = useState("");
-  const [newDoctorName, setNewDoctorName] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [patients, setPatients] = useState([
     { id: 1, name: 'Maria Souza', age: 35, status: 'Internada', bed: '3A-12' },
     { id: 2, name: 'João Pereira', age: 62, status: 'Alta Hoje', bed: '2B-07' },
@@ -44,6 +42,30 @@ export const AdminDashboard = () => {
     { id: 2, name: 'Dra. Ana Souza', specialty: 'Cardiologia' },
     { id: 3, name: 'Dr. Carlos Santos', specialty: 'Ortopedia' },
   ]);
+  const [newPatientName, setNewPatientName] = useState("");
+  const [newDoctorName, setNewDoctorName] = useState("");
+  const [editingPatientId, setEditingPatientId] = useState<number | null>(null);
+  const [editingPatientName, setEditingPatientName] = useState("");
+  const [editingDoctorId, setEditingDoctorId] = useState<number | null>(null);
+  const [editingDoctorName, setEditingDoctorName] = useState("");
+  const nextIdRef = useRef<number>(4); // inicia após os ids existentes
+  const genId = () => nextIdRef.current++;
+
+  const addPatient = () => {
+    const name = newPatientName.trim();
+    if(!name) return;
+    setPatients(prev => [...prev, { id: genId(), name, age: 0, status: 'Novo', bed: '-' }]);
+    setNewPatientName('');
+    toast({ title: 'Paciente adicionado (fake)' });
+  };
+
+  const addDoctor = () => {
+    const name = newDoctorName.trim();
+    if(!name) return;
+    setDoctors(prev => [...prev, { id: genId(), name, specialty: 'Geral' }]);
+    setNewDoctorName('');
+    toast({ title: 'Profissional adicionado (fake)' });
+  };
   const [admissions, setAdmissions] = useState([
     { id: 101, patient: 'Maria Souza', reason: 'Pneumonia', ward: 'A', bed: '12', since: '2025-08-28', status: 'Ativa' },
     { id: 102, patient: 'João Pereira', reason: 'AVC Isquêmico', ward: 'B', bed: '07', since: '2025-08-20', status: 'Alta Programada' },
@@ -208,7 +230,7 @@ export const AdminDashboard = () => {
               <FileBarChart className="h-6 w-6" />
               <span>Relatórios</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => toast({ title: 'Configurações (fake)' })}>
+            <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => setSettingsOpen(true)}>
               <Settings className="h-6 w-6" />
               <span>Configurações</span>
             </Button>
@@ -216,7 +238,7 @@ export const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog Cadastros */}
+      {/* Dialog Cadastros (com edição inline aprimorada) */}
       <Dialog open={registrationsOpen} onOpenChange={setRegistrationsOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
@@ -228,24 +250,39 @@ export const AdminDashboard = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Users className="h-4 w-4 text-primary" /> Pacientes</h4>
-                <Button size="sm" variant="outline" onClick={() => {
-                  if(!newPatientName.trim()) return;
-                  setPatients(p=>[...p,{ id: Date.now(), name: newPatientName, age: 0, status: 'Novo', bed: '-' }]);
-                  setNewPatientName('');
-                  toast({ title: 'Paciente cadastrado (fake)' });
-                }} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                <Button size="sm" onClick={addPatient} disabled={!newPatientName.trim()} className="gap-1"><Plus className="h-3 w-3" /> Adicionar</Button>
               </div>
-              <div className="flex gap-2">
-                <Input placeholder="Nome do paciente" value={newPatientName} onChange={e=>setNewPatientName(e.target.value)} className="text-sm" />
-              </div>
+              <Input placeholder="Nome do paciente" value={newPatientName} onChange={e=>setNewPatientName(e.target.value)} className="text-sm" onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addPatient(); } }} />
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {patients.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground italic">Nenhum paciente cadastrado.</p>
+                )}
                 {patients.map(p => (
-                  <div key={p.id} className="p-3 border rounded-md text-xs flex justify-between items-center bg-background/60">
-                    <div>
-                      <p className="font-medium text-sm leading-tight">{p.name}</p>
-                      <p className="text-muted-foreground">{p.status}</p>
+                  <div key={p.id} className="p-3 border rounded-md text-xs flex justify-between items-start gap-3 bg-background/60">
+                    <div className="flex-1">
+                      {editingPatientId === p.id ? (
+                        <div className="space-y-1">
+                          <Input value={editingPatientName} onChange={e=>setEditingPatientName(e.target.value)} className="h-7 text-xs" autoFocus />
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="secondary" className="h-7 px-2 text-[11px]" onClick={()=>{
+                              if(!editingPatientName.trim()) { toast({ title: 'Nome inválido' }); return; }
+                              setPatients(prev=> prev.map(x=> x.id===p.id ? { ...x, name: editingPatientName.trim() } : x));
+                              setEditingPatientId(null); setEditingPatientName('');
+                              toast({ title: 'Paciente atualizado (fake)' });
+                            }}>Salvar</Button>
+                            <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingPatientId(null); setEditingPatientName(''); }}>Cancelar</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-medium text-sm leading-tight">{p.name}</p>
+                          <p className="text-muted-foreground">{p.status}</p>
+                        </>
+                      )}
                     </div>
-                    <Button size="sm" variant="outline" onClick={()=>toast({ title: 'Editar (fake)' })}>Editar</Button>
+                    {editingPatientId !== p.id && (
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingPatientId(p.id); setEditingPatientName(p.name); }}>Editar</Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -254,22 +291,39 @@ export const AdminDashboard = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm flex items-center gap-1"><Stethoscope className="h-4 w-4 text-primary" /> Profissionais</h4>
-                <Button size="sm" variant="outline" onClick={() => {
-                  if(!newDoctorName.trim()) return;
-                  setDoctors(d=>[...d,{ id: Date.now(), name: newDoctorName, specialty: 'Geral' }]);
-                  setNewDoctorName('');
-                  toast({ title: 'Profissional cadastrado (fake)' });
-                }} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                <Button size="sm" onClick={addDoctor} disabled={!newDoctorName.trim()} className="gap-1"><Plus className="h-3 w-3" /> Adicionar</Button>
               </div>
-              <Input placeholder="Nome do profissional" value={newDoctorName} onChange={e=>setNewDoctorName(e.target.value)} className="text-sm" />
+              <Input placeholder="Nome do profissional" value={newDoctorName} onChange={e=>setNewDoctorName(e.target.value)} className="text-sm" onKeyDown={e=>{ if(e.key==='Enter'){ e.preventDefault(); addDoctor(); } }} />
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {doctors.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground italic">Nenhum profissional cadastrado.</p>
+                )}
                 {doctors.map(d => (
-                  <div key={d.id} className="p-3 border rounded-md text-xs flex justify-between items-center bg-background/60">
-                    <div>
-                      <p className="font-medium text-sm leading-tight">{d.name}</p>
-                      <p className="text-muted-foreground">{d.specialty}</p>
+                  <div key={d.id} className="p-3 border rounded-md text-xs flex justify-between items-start gap-3 bg-background/60">
+                    <div className="flex-1">
+                      {editingDoctorId === d.id ? (
+                        <div className="space-y-1">
+                          <Input value={editingDoctorName} onChange={e=>setEditingDoctorName(e.target.value)} className="h-7 text-xs" autoFocus />
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="secondary" className="h-7 px-2 text-[11px]" onClick={()=>{
+                              if(!editingDoctorName.trim()) { toast({ title: 'Nome inválido' }); return; }
+                              setDoctors(prev=> prev.map(x=> x.id===d.id ? { ...x, name: editingDoctorName.trim() } : x));
+                              setEditingDoctorId(null); setEditingDoctorName('');
+                              toast({ title: 'Profissional atualizado (fake)' });
+                            }}>Salvar</Button>
+                            <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingDoctorId(null); setEditingDoctorName(''); }}>Cancelar</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-medium text-sm leading-tight">{d.name}</p>
+                          <p className="text-muted-foreground">{d.specialty}</p>
+                        </>
+                      )}
                     </div>
-                    <Button size="sm" variant="outline" onClick={()=>toast({ title: 'Editar (fake)' })}>Editar</Button>
+                    {editingDoctorId !== d.id && (
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={()=>{ setEditingDoctorId(d.id); setEditingDoctorName(d.name); }}>Editar</Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -365,6 +419,94 @@ export const AdminDashboard = () => {
               {reportType === 'produtividade' && <p>Consultas médicas realizadas: 890. Média por médico: 52 no período.</p>}
               {customNotes && <p className="italic text-muted-foreground">Notas: {customNotes}</p>}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Configurações */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Settings className="h-5 w-5 text-primary" /> Configurações do Sistema</DialogTitle>
+            <DialogDescription>Preferências gerais e parâmetros simulados da plataforma.</DialogDescription>
+          </DialogHeader>
+          <div className="grid md:grid-cols-2 gap-8 text-sm">
+            <div className="space-y-5">
+              <div>
+                <h5 className="font-semibold mb-2 text-xs uppercase tracking-wide text-muted-foreground">Geral</h5>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-dark" className="text-xs">Tema escuro automático</label>
+                    <input id="cfg-dark" type="checkbox" className="h-4 w-4 accent-primary" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-metrics" className="text-xs">Coletar métricas anônimas</label>
+                    <input id="cfg-metrics" type="checkbox" defaultChecked className="h-4 w-4 accent-primary" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-labs" className="text-xs">Recursos experimentais</label>
+                    <input id="cfg-labs" type="checkbox" className="h-4 w-4 accent-primary" />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h5 className="font-semibold mb-2 text-xs uppercase tracking-wide text-muted-foreground">Alertas</h5>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-critical" className="text-xs">Alertas críticos em tempo real</label>
+                    <input id="cfg-critical" type="checkbox" defaultChecked className="h-4 w-4 accent-primary" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-email-digest" className="text-xs">Resumo diário por email</label>
+                    <input id="cfg-email-digest" type="checkbox" className="h-4 w-4 accent-primary" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-sms" className="text-xs">SMS em falhas críticas</label>
+                    <input id="cfg-sms" type="checkbox" className="h-4 w-4 accent-primary" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-5">
+              <div>
+                <h5 className="font-semibold mb-2 text-xs uppercase tracking-wide text-muted-foreground">Segurança</h5>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-2fa" className="text-xs">Exigir 2FA administradores</label>
+                    <input id="cfg-2fa" type="checkbox" defaultChecked className="h-4 w-4 accent-primary" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-audit" className="text-xs">Auditoria detalhada</label>
+                    <input id="cfg-audit" type="checkbox" defaultChecked className="h-4 w-4 accent-primary" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label htmlFor="cfg-anon" className="text-xs">Anonimizar exportações</label>
+                    <input id="cfg-anon" type="checkbox" className="h-4 w-4 accent-primary" />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h5 className="font-semibold mb-2 text-xs uppercase tracking-wide text-muted-foreground">Sistema</h5>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-xs">Versão</span>
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-muted">1.0.0 (fake)</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-xs">Status backups</span>
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-green-500/10 text-green-600">OK</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-xs">Uso de recursos</span>
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-600">Moderado</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button size="sm" variant="outline" onClick={()=> setSettingsOpen(false)}>Fechar</Button>
+            <Button size="sm" onClick={()=>{ toast({ title: 'Configurações salvas (fake)' }); setSettingsOpen(false); }}>Salvar (Fake)</Button>
           </div>
         </DialogContent>
       </Dialog>
